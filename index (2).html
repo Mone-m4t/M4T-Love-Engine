@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#ff4d4d">
+    <title>Love Engine - ເຄື່ອງຈັກແຫ່ງຄວາມຮັກ</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="manifest" id="pwa-manifest">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://i.postimg.cc/W3BSKNLz/Picsart-26-01-21-15-55-48-216.jpg">
+
+    <style>
+        :root {
+            --primary-love: #ff4d4d;
+            --bg-color: #fff5f5;
+            --text-main: #4a0000;
+            --card-bg: #ffffff;
+            --safe-transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            --font-lao: 'Noto Sans Lao', 'Phetsarath OT', sans-serif;
+        }
+
+        body.golden-mode {
+            --primary-love: #d4af37;
+            --bg-color: #1a1a1a;
+            --text-main: #ffd700;
+            --card-bg: #2a2a2a;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: var(--font-lao);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; text-align: center;
+            transition: background-color 1s ease;
+        }
+
+        #canvas-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        
+        #app { 
+            width: 90%; 
+            max-width: 450px; 
+            z-index: 10; 
+            position: relative; 
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .love-card {
+            background: var(--card-bg); padding: 2rem 1.5rem; border-radius: 32px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            transition: var(--safe-transition), background-color 1s ease;
+            position: relative; overflow: hidden;
+        }
+
+        body.golden-mode .love-card::after {
+            content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,215,0,0.2), transparent);
+            transform: rotate(45deg); animation: shine 3s infinite linear;
+        }
+        @keyframes shine { 0% { left: -100%; } 100% { left: 100%; } }
+
+        #message-display {
+            font-size: 1.5rem; font-weight: 800; min-height: 140px;
+            display: flex; align-items: center; justify-content: center;
+            line-height: 1.5; color: var(--primary-love);
+            transition: color 0.5s ease; padding: 0 10px;
+        }
+
+        .controls { display: grid; gap: 10px; margin-top: 1rem; }
+
+        .btn {
+            border: none; padding: 1rem; font-size: 1rem; border-radius: 18px;
+            font-weight: bold; cursor: pointer; transition: 0.3s; z-index: 2;
+            font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+
+        .btn-love { background: var(--primary-love); color: white; box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3); }
+        .btn-love:active { transform: scale(0.95); }
+        .btn-share { background: rgba(0,0,0,0.05); color: #888; }
+        
+        #btn-install { 
+            background: #2ecc71; color: white; margin-top: 10px; 
+            display: none;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        .ad-container { 
+            position: fixed; bottom: 20px; width: 90%; max-width: 400px; z-index: 100;
+            animation: ad-float 3s ease-in-out infinite;
+        }
+
+        .ad-content {
+            display: flex; align-items: center; gap: 12px;
+            text-decoration: none; color: inherit;
+            padding: 12px 18px; border-radius: 20px;
+            background: var(--card-bg); box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: 2px solid transparent; position: relative; overflow: hidden; transition: 0.3s;
+        }
+
+        .ad-content::before {
+            content: ""; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+            transform: skewX(-25deg); animation: ad-shimmer 3s infinite;
+        }
+
+        body.golden-mode .ad-content { border-color: rgba(212, 175, 55, 0.4); }
+
+        @keyframes ad-shimmer { 0% { left: -100%; } 20% { left: 150%; } 100% { left: 150%; } }
+        @keyframes ad-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+        .ad-logo { width: 45px; height: 45px; border-radius: 12px; }
+        .ad-text { text-align: left; flex-grow: 1; }
+        .ad-title { font-size: 0.85rem; font-weight: bold; color: var(--primary-love); display: block; }
+        .ad-desc { font-size: 0.75rem; opacity: 0.8; line-height: 1.2; }
+        .ad-badge { background: var(--primary-love); color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 6px; position: absolute; top: 10px; right: 15px; }
+
+        .intensity-bar { width: 100%; height: 5px; background: rgba(0,0,0,0.05); border-radius: 10px; margin-top: 20px; overflow: hidden; }
+        #intensity-fill { height: 100%; width: 0%; background: var(--primary-love); transition: width 0.4s ease; }
+        
+        #export-canvas { display: none; }
+    </style>
+</head>
+<body id="body-tag">
+
+    <canvas id="canvas-bg"></canvas>
+    <canvas id="export-canvas"></canvas>
+
+    <div id="app">
+        <div class="love-card">
+            <div id="status-tag" style="font-size: 0.7rem; letter-spacing: 1px; margin-bottom: 10px; font-weight: 900; opacity: 0.5;">READY SYSTEM</div>
+            <div id="message-display">ກົດປຸ່ມເພື່ອເລີ່ມຕົ້ນຄວາມຮັກ ❤️</div>
+            
+            <div class="controls">
+                <button class="btn btn-love" id="btn-generate">ສົ່ງຄວາມຮັກ</button>
+                <button class="btn btn-share" id="btn-share">📸 ບັນທຶກຮູບພາບ</button>
+                <button class="btn" id="btn-install">📲 ຕິດຕັ້ງແອັບໄວ້ໃນເຄື່ອງ</button>
+            </div>
+            
+            <div class="intensity-bar">
+                <div id="intensity-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ad-container">
+        <a href="https://wa.me/8562097870611?text=ຂ້ອຍສົນใจ%20M4T%20POS-ລະບົບຈັດການການຂາຍ" class="ad-content" target="_blank">
+            <span class="ad-badge">AD</span>
+            <img src="https://i.postimg.cc/T3XVwp6Z/1767710343039-2.png" alt="M4T" class="ad-logo">
+            <div class="ad-text">
+                <span class="ad-title">M4T POS ລະບົບຂາຍໜ້າຮ້ານ</span>
+                <span class="ad-desc">ຈັດການຮ້ານແບບມືອາຊີບ...<br>ຄລິກເພື່ອສັ່ງຊື້ທັນທີ</span>
+            </div>
+        </a>
+    </div>
+
+    <script>
+        // --- 1. PWA Engine (Updated for GitHub Pages) ---
+        let deferredPrompt;
+        const setupPWA = () => {
+            const manifest = {
+                "name": "Love Engine",
+                "short_name": "LoveEngine",
+                "start_url": "./index.html",
+                "display": "standalone",
+                "background_color": "#fff5f5",
+                "theme_color": "#ff4d4d",
+                "icons": [{ "src": "https://i.postimg.cc/W3BSKNLz/Picsart-26-01-21-15-55-48-216.jpg", "sizes": "512x512", "type": "image/jpeg" }]
+            };
+            document.querySelector('#pwa-manifest').setAttribute('href', 'data:application/json;base64,' + btoa(JSON.stringify(manifest)));
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                document.getElementById('btn-install').style.display = 'flex';
+            });
+        };
+
+        // --- 2. Service Worker Registration ---
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                self.addEventListener('install', e => self.skipWaiting());
+                self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => {})));
+            `;
+            const blob = new Blob([swCode], {type: 'text/javascript'});
+            navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(err => console.log("SW Error:", err));
+        }
+
+        // --- 3. Love Engine Logic ---
+        const LoveEngine = (() => {
+            const messages = [
+                "ເຈົ້າຄື semicolon ທີ່ເຮັດໃຫ້ຊີວິດຂ້ອຍສົມບູນ",
+                "ຮັກເຈົ້າເທົ່າກັບອານັນ (Infinity)",
+                "ຢາກເປັນ LocalStorage ຈະໄດ້ເກັບຄວາມຊົງຈຳເຮົາໄວ້",
+                "ເຖິງຊິມີເປັນລ້ານ Loop ກໍຈະຢຸດທີ່ເຈົ້າ",
+                "ຄວາມຮັກຂອງຂ້ອຍຄື Blockchain ທີ່ແກ້ໄຂບໍ່ໄດ້",
+                "ເຈົ້າຄື Bug ໂຕດຽວທີ່ຂ້ອຍບໍ່ຢາກແກ້",
+                "ຫົວໃຈຂ້ອຍບໍ່ມີ Stack Overflow ເພາະມີແຕ່ເຈົ້າ",
+                "ຮັກເຈົ້າແບບບໍ່ມີເງື່ອນໄຂ (No if-else)",
+                "ເຈົ້າຄື CSS ທີ່ເຮັດໃຫ້ HTML ຂອງຂ້ອຍສວຍງາມ"
+            ];
+
+            let state = { count: 0, isGolden: false };
+            let hearts = [];
+            const canvas = document.getElementById('canvas-bg');
+            const ctx = canvas.getContext('2d');
+
+            const createHeart = () => {
+                hearts.push({
+                    x: Math.random() * canvas.width,
+                    y: canvas.height + 20,
+                    s: Math.random() * 20 + 10,
+                    v: Math.random() * 2 + 1,
+                    o: 1
+                });
+            };
+
+            const draw = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = hearts.length - 1; i >= 0; i--) {
+                    let h = hearts[i];
+                    h.y -= h.v;
+                    h.o -= 0.005;
+                    ctx.globalAlpha = h.o;
+                    ctx.font = `${h.s}px Arial`;
+                    ctx.fillText('❤️', h.x, h.y);
+                    if (h.o <= 0) hearts.splice(i, 1);
+                }
+                requestAnimationFrame(draw);
+            };
+
+            return {
+                init: () => {
+                    setupPWA();
+                    const resize = () => {
+                        canvas.width = window.innerWidth;
+                        canvas.height = window.innerHeight;
+                    };
+                    window.addEventListener('resize', resize);
+                    resize();
+
+                    document.getElementById('btn-generate').onclick = () => {
+                        state.count++;
+                        if ("vibrate" in navigator) navigator.vibrate(20);
+                        
+                        const msg = messages[Math.floor(Math.random() * messages.length)];
+                        document.getElementById('message-display').innerText = msg;
+                        
+                        let progress = Math.min(state.count * 2, 100);
+                        document.getElementById('intensity-fill').style.width = progress + '%';
+
+                        if(state.count >= 50 && !state.isGolden) {
+                            state.isGolden = true;
+                            document.body.classList.add('golden-mode');
+                            document.getElementById('status-tag').innerText = "✨ ULTIMATE LOVE ✨";
+                        }
+                        createHeart();
+                    };
+
+                    document.getElementById('btn-share').onclick = () => {
+                        const ex = document.getElementById('export-canvas');
+                        const exCtx = ex.getContext('2d');
+                        ex.width = 1080; ex.height = 1080; // เพิ่มความละเอียดภาพ
+                        
+                        // Background
+                        exCtx.fillStyle = state.isGolden ? "#1a1a1a" : "#fff5f5";
+                        exCtx.fillRect(0, 0, 1080, 1080);
+                        
+                        // Text Style
+                        exCtx.fillStyle = state.isGolden ? "#ffd700" : "#ff4d4d";
+                        exCtx.textAlign = "center";
+                        exCtx.textBaseline = "middle";
+                        
+                        // รองรับ Font ภาษาลาวใน Canvas
+                        exCtx.font = "bold 50px 'Noto Sans Lao', sans-serif";
+                        const lines = document.getElementById('message-display').innerText.split('\n');
+                        lines.forEach((line, i) => {
+                            exCtx.fillText(line, 540, 540 + (i * 60));
+                        });
+                        
+                        const link = document.createElement('a');
+                        link.download = `love-engine-${Date.now()}.png`;
+                        link.href = ex.toDataURL('image/png');
+                        link.click();
+                    };
+
+                    document.getElementById('btn-install').onclick = async () => {
+                        if (deferredPrompt) {
+                            deferredPrompt.prompt();
+                            const { outcome } = await deferredPrompt.userChoice;
+                            if (outcome === 'accepted') document.getElementById('btn-install').style.display = 'none';
+                            deferredPrompt = null;
+                        }
+                    };
+
+                    draw();
+                }
+            }
+        })();
+
+        document.addEventListener('DOMContentLoaded', LoveEngine.init);
+    </script>
+</body>
+</html>
